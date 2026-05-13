@@ -1,8 +1,9 @@
 import type { Request, Response } from "express";
 import { Authservice } from "./auth.service";
 import { ApiResponse } from "../../utils/ApiResponse";
+import catchAsync from "../../utils/carchAsync";
 
-const login = async (req: Request, res: Response) => {
+const login = catchAsync(async (req: Request, res: Response) => {
     const result = await Authservice.login("najmulislam624@gmail.com")
     // res.json({
     //     success: true,
@@ -10,19 +11,24 @@ const login = async (req: Request, res: Response) => {
     //     data: result
     // });
     ApiResponse.success(res, "Login successful", result)
-};
-const register = async (req: Request, res: Response) => {
+})
+
+const register = catchAsync(
+    async (req: Request, res: Response) => {
     const result = await Authservice.register("najmulislam624@gmail.com")
     ApiResponse.success(res, "Registration successful", result, 201)
-};
-const changePassword = async (req: Request, res: Response) => {
+}
+)
+
+const changePassword = catchAsync(async (req: Request, res: Response) => {
     const result = await Authservice.changePassword("najmulislam624@gmail.com")
     ApiResponse.success(res, "Password changed successfully", result)
-};
-const forgotPassword = async (req: Request, res: Response) => {
+})
+
+const forgotPassword = catchAsync(async (req: Request, res: Response) => {
     const result = await Authservice.forgotPassword("najmulislam624@gmail.com")
     ApiResponse.success(res, "Password reset link sent successfully", result)
-};
+})
 
 export const AuthController = {
     login,
