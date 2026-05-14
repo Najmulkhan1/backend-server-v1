@@ -2,6 +2,244 @@
 
 **Diagram Link:** [View Database Concepts Diagram](https://drive.google.com/file/d/1sbPJTu38UQ3GpyHEJW4Sd29zfvNcKZWc/view?usp=sharing)
 
+
+# SQL Interview Questions & Answers
+
+---
+
+## 1. DELETE vs TRUNCATE vs DROP
+
+| Command | What it does | Rollback? | WHERE clause? | Removes structure? |
+|---|---|---|---|---|
+| `DELETE` | Removes specific rows | ✅ Yes | ✅ Yes | ❌ No |
+| `TRUNCATE` | Removes **all** rows fast | ❌ No | ❌ No | ❌ No |
+| `DROP` | Removes the **entire table** | ❌ No | ❌ No | ✅ Yes |
+
+```sql
+DELETE FROM employees WHERE id = 5;   -- removes one row
+TRUNCATE TABLE employees;             -- empties the table
+DROP TABLE employees;                 -- deletes the table entirely
+```
+
+---
+
+## 2. What is a PRIMARY KEY?
+
+A **PRIMARY KEY** is a column (or set of columns) that **uniquely identifies each row** in a table.
+
+- Cannot be `NULL`
+- Must be **unique**
+- Only **one** per table
+
+```sql
+CREATE TABLE employees (
+    id INT PRIMARY KEY,
+    name VARCHAR(100)
+);
+```
+
+---
+
+## 3. PRIMARY KEY vs UNIQUE KEY
+
+| Feature | PRIMARY KEY | UNIQUE KEY |
+|---|---|---|
+| Uniqueness | ✅ Must be unique | ✅ Must be unique |
+| NULL allowed | ❌ No | ✅ Yes (one NULL) |
+| Count per table | Only **one** | **Multiple** allowed |
+| Purpose | Row identifier | Enforce uniqueness on other columns |
+
+```sql
+CREATE TABLE users (
+    id INT PRIMARY KEY,        -- primary key
+    email VARCHAR(100) UNIQUE  -- unique key
+);
+```
+
+---
+
+## 4. What is a FOREIGN KEY?
+
+A **FOREIGN KEY** is a column that **links one table to the PRIMARY KEY of another table**. It enforces **referential integrity** — you can't insert a value that doesn't exist in the parent table.
+
+```sql
+CREATE TABLE orders (
+    order_id INT PRIMARY KEY,
+    customer_id INT,
+    FOREIGN KEY (customer_id) REFERENCES customers(id)
+);
+```
+
+> If `customer_id = 99` doesn't exist in `customers`, the insert will **fail**.
+
+---
+
+## 5. What is JOIN in SQL?
+
+A **JOIN** combines rows from two or more tables based on a related column.
+
+### INNER JOIN
+Returns only rows that have **matching values in both tables**.
+
+```sql
+SELECT e.name, d.department_name
+FROM employees e
+INNER JOIN departments d ON e.dept_id = d.id;
+-- Only employees WHO HAVE a matching department are returned
+```
+
+### LEFT JOIN
+Returns **all rows from the left table**, and matched rows from the right (NULL if no match).
+
+```sql
+SELECT e.name, d.department_name
+FROM employees e
+LEFT JOIN departments d ON e.dept_id = d.id;
+-- ALL employees returned; department is NULL if unassigned
+```
+
+---
+
+## 6. What is Normalization?
+
+**Normalization** is the process of organizing a database to **reduce redundancy** and **improve data integrity**.
+
+### 1NF (First Normal Form)
+- Each column must hold **atomic (indivisible) values**
+- No repeating groups or arrays
+
+```
+❌ Bad:  | John | Math, Science |
+✅ Good: | John | Math          |
+         | John | Science       |
+```
+
+### 2NF (Second Normal Form)
+- Must be in 1NF
+- **No partial dependency** — every non-key column must depend on the **whole** primary key
+
+```
+❌ Bad:  (student_id, course_id) → student_name  [name depends only on student_id]
+✅ Good: Move student_name to a separate Students table
+```
+
+### 3NF (Third Normal Form)
+- Must be in 2NF
+- **No transitive dependency** — non-key columns must not depend on other non-key columns
+
+```
+❌ Bad:  employee_id → dept_id → dept_name  [dept_name depends on dept_id, not emp]
+✅ Good: Move dept_name to a separate Departments table
+```
+
+---
+
+## 7. What is Indexing?
+
+An **index** is a data structure that allows the database to **find rows faster** — like a book's index instead of reading every page.
+
+### Why use an index?
+- ⚡ Speeds up `SELECT` / `WHERE` / `JOIN` queries dramatically
+- Used on columns that are frequently searched or filtered
+
+```sql
+CREATE INDEX idx_email ON users(email);
+
+-- Now this query is much faster:
+SELECT * FROM users WHERE email = 'test@example.com';
+```
+
+> ⚠️ **Trade-off:** Indexes **slow down** `INSERT`, `UPDATE`, `DELETE` slightly because the index must also be updated.
+
+---
+
+## 8. WHERE vs HAVING
+
+| | WHERE | HAVING |
+|---|---|---|
+| Filters | **Individual rows** | **Grouped rows** |
+| Used with | Any query | `GROUP BY` queries |
+| Aggregate functions? | ❌ No | ✅ Yes |
+
+```sql
+-- WHERE filters rows BEFORE grouping
+SELECT dept, COUNT(*)
+FROM employees
+WHERE salary > 30000
+GROUP BY dept;
+
+-- HAVING filters AFTER grouping
+SELECT dept, COUNT(*) AS total
+FROM employees
+GROUP BY dept
+HAVING COUNT(*) > 5;
+```
+
+---
+
+## 9. What is a Transaction in SQL?
+
+A **transaction** is a sequence of SQL operations treated as a **single unit**. Either ALL succeed or NONE do. (Follows **ACID** properties)
+
+### COMMIT
+Permanently saves the transaction.
+
+### ROLLBACK
+Undoes all changes if something goes wrong.
+
+```sql
+BEGIN TRANSACTION;
+
+UPDATE accounts SET balance = balance - 1000 WHERE id = 1;  -- debit
+UPDATE accounts SET balance = balance + 1000 WHERE id = 2;  -- credit
+
+-- If both succeed:
+COMMIT;
+
+-- If any error occurs:
+ROLLBACK;  -- both updates are reversed
+```
+
+> **Real-world example:** Bank transfer — money must leave one account AND enter another. If either fails, both must be undone.
+
+---
+
+## 10. Query to Find the Second Highest Salary
+
+### Method 1 — Subquery (Classic)
+```sql
+SELECT MAX(salary) AS second_highest
+FROM employees
+WHERE salary < (SELECT MAX(salary) FROM employees);
+```
+
+### Method 2 — LIMIT/OFFSET
+```sql
+SELECT DISTINCT salary
+FROM employees
+ORDER BY salary DESC
+LIMIT 1 OFFSET 1;
+```
+
+### Method 3 — DENSE_RANK() ✅ Best for Interviews
+```sql
+SELECT salary
+FROM (
+    SELECT salary, DENSE_RANK() OVER (ORDER BY salary DESC) AS rnk
+    FROM employees
+) ranked
+WHERE rnk = 2;
+```
+
+> `DENSE_RANK()` handles **duplicate salaries** correctly, making it the most robust solution.
+
+---
+
+*SQL Interview Preparation Guide*
+
+
+
+
 This document provides a comprehensive overview of essential database concepts, ranging from basic key definitions to advanced scaling techniques.
 
 ---
