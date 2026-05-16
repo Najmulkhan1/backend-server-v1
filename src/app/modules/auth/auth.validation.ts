@@ -44,5 +44,20 @@ export const LoginValidationSchema = z.object({
   password: z.string().min(6, "password should be at least 6 characters long"),
 });
 
+export const verifyEmailSchema = z.object({
+  email: z
+    .email("Invalid email address"),
+
+  verificationCode: z
+    .string()
+    .min(6, "Verification code must be 6 characters")
+    .max(6, "Verification code must be 6 characters"),
+  code: z
+    .string()
+    .min(6, "Verification code must be 6 characters")
+    .max(6, "Verification code must be 6 characters"),
+});
+
 export type UserRetisger = z.infer<typeof userValidationSchema>;
 export type UserLogin = z.infer<typeof LoginValidationSchema>;
+export type UserVerifyEmail = z.infer<typeof verifyEmailSchema>;

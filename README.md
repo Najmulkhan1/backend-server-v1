@@ -3,6 +3,9 @@
 **Diagram Link:** [View Database Concepts Diagram](https://drive.google.com/file/d/1sbPJTu38UQ3GpyHEJW4Sd29zfvNcKZWc/view?usp=sharing)
 
 **APi Image Link:** [View Api image](https://drive.google.com/file/d/1N04J3exDdbJswEfzp6jFcN1pnATZrAbo/view?usp=sharing)
+**APi Image Link 1:** [Register Api image](https://drive.google.com/file/d/19uP6_0CtWwOqMRnzxQt-TP90B3H7owqN/view?usp=sharing)
+**APi Image Link 2:** [Verify Api image](https://drive.google.com/file/d/18RfBG-0yfdGhtTxZBRpuPfYNffs2zsJo/view?usp=sharing)
+**APi Image Link 3:** [Login Api image](https://drive.google.com/file/d/1iDwhoxqBtE7hIQ9Y50OwBJuJFw2VaBbn/view?usp=sharing)
 
 
 

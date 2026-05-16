@@ -1,13 +1,14 @@
 import { da } from "zod/locales";
 import { prisma } from "../../../lib/prisma";
-import type { UserRetisger } from "./auth.validation";
+import type { UserLogin, UserRetisger, UserVerifyEmail } from "./auth.validation";
 import { get } from "node:http";
 import { sendVerificationEmail } from "../../utils/sendEmail";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import env from "../../../config/env";
+import type { User } from "@prisma/client";
 
-const login = async (payload: {email: string, password: string}) => {
+const login = async (payload: UserLogin) => {
   const user = await prisma.user.findUnique({
     where: {
         email: payload.email
@@ -86,7 +87,8 @@ const register = async (payload: UserRetisger) => {
   return userWithoutSecrets;
 };
 
-const verifyEmail = async (payload: { email:string, code: string}) => {
+const verifyEmail = async (payload: UserVerifyEmail
+) => {
     const user = await prisma.user.findUnique({
         where: {
             email: payload.email
