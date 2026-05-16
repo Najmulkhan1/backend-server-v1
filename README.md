@@ -1,6 +1,282 @@
 # Database Management Systems (DBMS) Fundamentals
 
 **Diagram Link:** [View Database Concepts Diagram](https://drive.google.com/file/d/1sbPJTu38UQ3GpyHEJW4Sd29zfvNcKZWc/view?usp=sharing)
+**APi Image Link:** [View Api image](https://drive.google.com/file/d/1N04J3exDdbJswEfzp6jFcN1pnATZrAbo/view?usp=sharing)
+
+
+
+# Prisma ORM Interview Questions & Answers
+
+---
+
+## 1. What is Prisma ORM and why is it used in backend development?
+
+**Prisma** is a modern **Object-Relational Mapper (ORM)** for Node.js and TypeScript that simplifies database access by letting you interact with your database using **type-safe JavaScript/TypeScript code** instead of raw SQL.
+
+### Why Prisma is used:
+- ✅ **Type Safety** — auto-generates TypeScript types from your schema, catching errors at compile time
+- ✅ **Auto-completion** — full IntelliSense support in editors like VS Code
+- ✅ **Readable Queries** — clean, intuitive API instead of complex SQL
+- ✅ **Migration System** — tracks and applies database schema changes automatically
+- ✅ **Multi-database Support** — works with PostgreSQL, MySQL, SQLite, MongoDB, and more
+- ✅ **Prisma Studio** — built-in visual GUI to browse and edit your database
+
+### Without Prisma (raw SQL):
+```js
+const result = await db.query("SELECT * FROM users WHERE id = $1", [1]);
+```
+
+### With Prisma:
+```js
+const user = await prisma.user.findUnique({ where: { id: 1 } });
+```
+
+> Prisma makes backend development **faster, safer, and more maintainable**.
+
+---
+
+## 2. Difference between `findUnique()` and `findFirst()`
+
+| Feature | `findUnique()` | `findFirst()` |
+|---|---|---|
+| Searches by | **Unique or Primary Key** fields only | **Any field** |
+| Returns | One record or `null` | First matching record or `null` |
+| Multiple matches | ❌ Not possible (unique fields) | ✅ Returns the first one |
+| `orderBy` support | ❌ No | ✅ Yes |
+| Performance | Slightly faster (indexed lookup) | Slightly slower (full scan possible) |
+
+### `findUnique()` — must use a unique/primary field
+```js
+// Find user by primary key (id)
+const user = await prisma.user.findUnique({
+  where: { id: 1 },
+});
+
+// Find user by unique field (email)
+const user = await prisma.user.findUnique({
+  where: { email: "john@example.com" },
+});
+```
+
+### `findFirst()` — can use any field, with optional ordering
+```js
+// Find first user with a specific name
+const user = await prisma.user.findFirst({
+  where: { name: "John" },
+  orderBy: { createdAt: "desc" }, // get the most recent one
+});
+```
+
+> Use `findUnique()` when searching by **id or email**.
+> Use `findFirst()` when searching by **non-unique fields**.
+
+---
+
+## 3. What is Prisma Migration and why is `prisma migrate dev` used?
+
+### What is a Migration?
+A **migration** is a recorded set of changes to your database schema (e.g., adding a table, adding a column, changing a data type). Prisma tracks these changes in migration files so your database stays in sync with your `schema.prisma`.
+
+### `prisma migrate dev` — used during Development
+```bash
+npx prisma migrate dev --name add_users_table
+```
+
+### What it does:
+1. 🔍 Detects changes in your `schema.prisma`
+2. 📝 Creates a new **SQL migration file** inside `prisma/migrations/`
+3. 🚀 Applies the migration to your **development database**
+4. 🔄 Regenerates **Prisma Client** automatically
+
+### Other migration commands:
+
+| Command | Purpose |
+|---|---|
+| `prisma migrate dev` | Apply migrations in **development** |
+| `prisma migrate deploy` | Apply migrations in **production** |
+| `prisma migrate reset` | Reset DB and re-run all migrations |
+| `prisma migrate status` | Check which migrations have been applied |
+
+### Example flow:
+```
+1. You add a new model to schema.prisma
+2. Run: npx prisma migrate dev --name add_post_table
+3. Prisma creates: prisma/migrations/20240101_add_post_table/migration.sql
+4. Migration is applied to the database ✅
+```
+
+> Migration ensures your **database schema and code always stay in sync**.
+
+---
+
+## 4. Difference between `select` and `include` in Prisma
+
+### `select` — Choose ONLY specific fields to return
+```js
+const user = await prisma.user.findUnique({
+  where: { id: 1 },
+  select: {
+    id: true,
+    name: true,
+    email: true,
+    // password is NOT selected — good for security!
+  },
+});
+
+// Result:
+// { id: 1, name: "John", email: "john@example.com" }
+```
+
+### `include` — Return ALL fields + include related models
+```js
+const user = await prisma.user.findUnique({
+  where: { id: 1 },
+  include: {
+    posts: true,   // includes all related posts
+    profile: true, // includes related profile
+  },
+});
+
+// Result:
+// {
+//   id: 1,
+//   name: "John",
+//   email: "john@example.com",
+//   posts: [ { id: 1, title: "Hello World" }, ... ],
+//   profile: { bio: "Developer" }
+// }
+```
+
+### Key Differences:
+
+| Feature | `select` | `include` |
+|---|---|---|
+| Returns | Only selected fields | All fields + relations |
+| Use case | Control exact output shape | Load related data (joins) |
+| Can fetch relations? | ✅ Yes (with nested select) | ✅ Yes |
+| Can be used together? | ❌ Cannot use both at same level | ❌ Cannot use both at same level |
+
+### Nested select inside include:
+```js
+const user = await prisma.user.findUnique({
+  where: { id: 1 },
+  include: {
+    posts: {
+      select: {
+        title: true, // only get post titles
+        createdAt: true,
+      },
+    },
+  },
+});
+```
+
+> Use `select` to **limit fields** (performance + security).
+> Use `include` to **load related models** (like SQL JOIN).
+
+---
+
+## 5. Purpose of Prisma Schema File (`schema.prisma`) and its Main Sections
+
+The `schema.prisma` file is the **heart of your Prisma setup**. It is the single source of truth that defines:
+- How Prisma connects to your database
+- The structure of your database tables (models)
+- How Prisma Client is generated
+
+### It has 3 main sections:
+
+---
+
+### Section 1: `generator` — Prisma Client configuration
+Tells Prisma to generate the client library you use in your code.
+
+```prisma
+generator client {
+  provider = "prisma-client-js"
+}
+```
+
+---
+
+### Section 2: `datasource` — Database connection
+Defines which database to connect to and the connection URL.
+
+```prisma
+datasource db {
+  provider = "postgresql"   // or "mysql", "sqlite", "mongodb"
+  url      = env("DATABASE_URL")  // stored in .env file
+}
+```
+
+---
+
+### Section 3: `model` — Database tables/collections
+Defines your tables, columns, data types, and relationships.
+
+```prisma
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  posts     Post[]   // one-to-many relation
+}
+
+model Post {
+  id        Int      @id @default(autoincrement())
+  title     String
+  content   String?
+  published Boolean  @default(false)
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  Int
+  createdAt DateTime @default(now())
+}
+```
+
+### Common Prisma Field Attributes:
+
+| Attribute | Meaning |
+|---|---|
+| `@id` | Primary key |
+| `@unique` | Unique constraint |
+| `@default(value)` | Default value |
+| `@relation(...)` | Defines a relationship |
+| `@updatedAt` | Auto-updates timestamp |
+| `?` after type | Field is optional (nullable) |
+
+### Full example `schema.prisma`:
+```prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  createdAt DateTime @default(now())
+  posts     Post[]
+}
+
+model Post {
+  id       Int    @id @default(autoincrement())
+  title    String
+  author   User   @relation(fields: [authorId], references: [id])
+  authorId Int
+}
+```
+
+> The `schema.prisma` file lets you **design your entire database visually in one place** — Prisma handles the rest.
+
+---
+
+*Prisma ORM Interview Preparation Guide*
 
 
 # SQL Interview Questions & Answers
