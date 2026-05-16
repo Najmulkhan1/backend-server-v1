@@ -1,6 +1,7 @@
 # Database Management Systems (DBMS) Fundamentals
 
 **Diagram Link:** [View Database Concepts Diagram](https://drive.google.com/file/d/1sbPJTu38UQ3GpyHEJW4Sd29zfvNcKZWc/view?usp=sharing)
+
 **APi Image Link:** [View Api image](https://drive.google.com/file/d/1N04J3exDdbJswEfzp6jFcN1pnATZrAbo/view?usp=sharing)
 
 
