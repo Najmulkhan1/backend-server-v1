@@ -1,25 +1,26 @@
 import { Server } from "node:http";
 import app from "./app";
 import env from "./config/env";
-
+import { connectDB } from "./lib/mongoose";
+import dotenv from 'dotenv';
+dotenv.config();
 
 let server: Server;
 
-const boststrap = async () => {
-
-    try {
-        server = app.listen(env.port, () => {
-        console.log(`Server is running on port ${env.port}`);
-    })
-    } catch (error) {
-        console.error("Error starting server:", error);
-    }
-    
-}
+const bootstrap = async () => {
+  try {
+    await connectDB();
+    server = app.listen(env.port, () => {
+      console.log(`Server is running on port ${env.port}`);
+    });
+  } catch (error) {
+    console.error("Error starting server:", error);
+  }
+};
 
 (async () => {
-    await boststrap()
-})()
+  await bootstrap();
+})();
 
 
 process.on("unhandledRejection", (error) => {
